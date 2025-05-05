@@ -6,6 +6,7 @@ import (
 	"task-time-logger-go/handlers"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -17,6 +18,7 @@ func main() {
 	db.InitDB()
 	defer db.DB.Close()
 	app := fiber.New()
+	app.Use(cors.New())
 
 	app.Get("/", func(ctx *fiber.Ctx) error {
 		ctx.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
