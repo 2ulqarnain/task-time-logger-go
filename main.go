@@ -1,22 +1,15 @@
 package main
 
 import (
-	"log"
-	"task-time-logger-go/db"
 	"task-time-logger-go/handlers"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file, Error:%s", err.Error())
-	}
-	db.InitDB()
-	defer db.DB.Close()
+	// db.InitDB()
+	// defer db.DB.Close()
 	app := fiber.New()
 	app.Use(cors.New())
 
@@ -26,9 +19,11 @@ func main() {
 	})
 
 	apiGroup := app.Group("/api")
-	tasksGroup := apiGroup.Group("/tasks")
+	tasks := apiGroup.Group("/tasks")
+	projects := apiGroup.Group("/projects")
 
-	tasksGroup.Get("/", handlers.GetTasks)
+	tasks.Get("/", handlers.GetTasks)
+	projects.Get("/", handlers.GetAllProjectsKeys)
 
 	app.Listen(":8080")
 }

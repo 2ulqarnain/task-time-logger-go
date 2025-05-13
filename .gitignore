@@ -1,0 +1,2 @@
+.env
+db/task-time-logger-sqlite.db
