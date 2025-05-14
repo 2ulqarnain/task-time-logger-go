@@ -2,28 +2,17 @@ package utils
 
 import (
 	"io"
-	"log"
 	"net/http"
-	"os"
-
-	"github.com/joho/godotenv"
+	"task-time-logger-go/utils/vars"
 )
 
 func CallJiraApi(url string) ([]byte, error) {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file, Error:%s", err.Error())
-	}
-
-	username := os.Getenv("JIRA_USERNAME")
-	password := os.Getenv("JIRA_API_TOKEN")
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		panic(err)
 	}
-	req.SetBasicAuth(username, password)
+	req.SetBasicAuth(vars.JIRA_USERNAME, vars.JIRA_PASSWORD)
 
 	client := &http.Client{}
 
