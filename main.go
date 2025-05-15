@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"task-time-logger-go/handlers"
+	"task-time-logger-go/utils/enums/params"
 	"task-time-logger-go/utils/vars"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,7 +30,7 @@ func main() {
 	})
 
 	apiGroup := app.Group("/api")
-	tasks := apiGroup.Group("/tasks")
+	tasks := apiGroup.Group("/tasks/:" + params.TICKET_ID)
 	projects := apiGroup.Group("/projects")
 
 	tasks.Get("/", handlers.GetTasks)
