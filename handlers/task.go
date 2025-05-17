@@ -20,7 +20,7 @@ func GetTasks(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).SendString(err.Error())
 	}
 
-	data := gjson.GetBytes(body, "issues.#.{key,title:fields.summary}")
+	data := gjson.GetBytes(body, "issues.#.{fields}")
 
 	return ctx.JSON(data.Value())
 }
@@ -38,9 +38,17 @@ func GetTaskByID(ctx *fiber.Ctx) error {
 }
 
 func InitTaskTimeLog(ctx *fiber.Ctx) error {
-	ticketID := ctx.Params("ticketId")
+	ticketID := ctx.Params(params.TICKET_ID)
+	fmt.Println(ticketID)
 	if ticketID == "" {
 		return ctx.Status(fiber.StatusBadRequest).SendString("Ticket ID not provided!")
 	}
+
+	file, err := utils.CreateFileInDB("data.gob")
+	
+	if err != nil {
+		return 
+	}
+
 	return ctx.SendString("Ticket successfully posted!")
 }
