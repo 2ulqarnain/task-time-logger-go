@@ -24,16 +24,14 @@ func main() {
 	app := fiber.New()
 	app.Use(cors.New())
 
-	app.Get("/", func(ctx *fiber.Ctx) error {
-		ctx.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
-		return ctx.SendString("<html><div style='font-family:sans-serif;display:grid;place-items:center;width:100vw;height:100vh;'><p>Go Fiber - <b>Task Time Logger</b></p></html>")
-	})
+	app.Get("/", handlers.GetHomePage)
 
 	apiGroup := app.Group("/api")
-	tasks := apiGroup.Group("/tasks/:" + params.TICKET_ID)
+	tasks := apiGroup.Group("/tasks")
 	projects := apiGroup.Group("/projects")
 
 	tasks.Get("/", handlers.GetTasks)
+	tasks.Get("/:"+params.TICKET_ID, handlers.GetTaskByID)
 	projects.Get("/", handlers.GetAllProjectsKeys)
 
 	app.Listen(":8080")
