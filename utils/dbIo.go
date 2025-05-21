@@ -7,19 +7,20 @@ import (
 	"path/filepath"
 	"task-time-logger-go/utils/out"
 	"task-time-logger-go/utils/vars"
+	"time"
 )
 
 type Ticket struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	StartedOn string `json:"statedOn"`
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	StartedOn time.Time `json:"statedOn"`
 }
 
 type TicketDB struct {
 	Tickets map[string]Ticket
 }
 
-func loadTickets(filename string) (*TicketDB, error) {
+func LoadTickets(filename string) (*TicketDB, error) {
 	db := &TicketDB{
 		Tickets: make(map[string]Ticket),
 	}
@@ -55,7 +56,7 @@ func saveTickets(filename string, db *TicketDB) error {
 
 func (db *TicketDB) addTicketIfNotExists(ticket Ticket) bool {
 	if _, exists := db.Tickets[ticket.ID]; exists {
-		return false // Ticket already exists
+		return false
 	}
 	db.Tickets[ticket.ID] = ticket
 	return true
@@ -71,7 +72,7 @@ func SaveTicketsToFile(tickets []Ticket) {
 
 	filePath := filepath.Join("db", filename)
 
-	db, err := loadTickets(filePath)
+	db, err := LoadTickets(filePath)
 	if err != nil {
 		fmt.Printf("Error loading tickets: %v\n", err)
 		return

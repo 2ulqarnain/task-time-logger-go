@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"task-time-logger-go/utils"
 	"task-time-logger-go/utils/enums/params"
+	"task-time-logger-go/utils/out"
 	"task-time-logger-go/utils/vars"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/tidwall/gjson"
@@ -44,10 +47,47 @@ func InitTaskTimeLog(ctx *fiber.Ctx) error {
 	}
 
 	var tickets []utils.Ticket = []utils.Ticket{
-		{ID: "123", Title: "Sample Title", StartedOn: "2025-05-10T12:00"},
+		{ID: ticketID, Title: "Sample Title", StartedOn: time.Now()},
 	}
 
 	utils.SaveTicketsToFile(tickets)
 
 	return ctx.SendString("Ticket successfully posted!")
+}
+
+func GetAddedTasks(ctx *fiber.Ctx) error {
+	filename := vars.DB_FILENAME
+
+	if filename == "" {
+		out.Errorln("No file name provided for retrieving data...proceeding with backup filename: data_backup.gob")
+		filename = "data_backup.gob"
+	}
+
+	filePath := filepath.Join("db", filename)
+
+	db, err := utils.LoadTickets(filePath)
+
+	if err != nil {
+		out.Errorln(err.Error())
+		return ctx.Status(fiber.StatusInternalServerError).SendString("Internal server error while retrieving files from db!")
+	}
+
+	type TicketResponse struct {
+		ID        string    `json:"id"`
+		Title     string    `json:"title"`
+		StartedOn time.Time `json:"startedOn"`
+		Age       string    `json:"age"`
+	}
+
+	var response []TicketResponse
+	for _, ticket := range db.Tickets {
+		response = append(response, TicketResponse{
+			ID:        ticket.ID,
+			Title:     ticket.Title,
+			StartedOn: ticket.StartedOn,
+			Age:       utils.TimeAgo(ticket.StartedOn),
+		})
+	}
+
+	return ctx.JSON(response)
 }

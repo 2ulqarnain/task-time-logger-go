@@ -30,6 +30,7 @@ func main() {
 	projects := apiGroup.Group("/projects")
 
 	tasks.Get("/", handlers.GetTasks)
+	tasks.Get("/added/", handlers.GetAddedTasks)
 	tasks.Get("/:"+params.TICKET_ID, handlers.GetTaskByID)
 	tasks.Post("/:"+params.TICKET_ID, handlers.InitTaskTimeLog)
 	projects.Get("/", handlers.GetAllProjectsKeys)
