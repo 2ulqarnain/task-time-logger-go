@@ -12,7 +12,7 @@ func CallJiraApi(url string) ([]byte, error) {
 	if err != nil {
 		panic(err)
 	}
-	req.SetBasicAuth(vars.JIRA_USERNAME, vars.JIRA_PASSWORD)
+	req.SetBasicAuth(vars.JIRA_USERNAME, vars.JIRA_API_TOKEN)
 
 	client := &http.Client{}
 

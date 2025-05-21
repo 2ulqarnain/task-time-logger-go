@@ -16,11 +16,10 @@ func main() {
 	if err != nil {
 		panic("Couldn't Load .env file!")
 	}
-	vars.JIRA_USERNAME = os.Getenv("JIRA_USERNAME")
-	vars.JIRA_PASSWORD = os.Getenv("JIRA_API_TOKEN")
+	vars.DB_FILENAME = os.Getenv("DB_FILENAME")
 	vars.JIRA_BASE_URL = os.Getenv("JIRA_BASE_URL")
-	// db.InitDB()
-	// defer db.DB.Close()
+	vars.JIRA_USERNAME = os.Getenv("JIRA_USERNAME")
+	vars.JIRA_API_TOKEN = os.Getenv("JIRA_API_TOKEN")
 	app := fiber.New()
 	app.Use(cors.New())
 
