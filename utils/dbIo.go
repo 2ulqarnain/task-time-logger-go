@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/gob"
-	"fmt"
 	"os"
 	"path/filepath"
 	"task-time-logger-go/utils/out"
@@ -20,11 +19,38 @@ type TicketDB struct {
 	Tickets map[string]Ticket
 }
 
-func LoadTickets(filename string) (*TicketDB, error) {
+func getDBPath() string {
+	filename := vars.DB_FILENAME
+	if filename == "" {
+		out.Errorln("No file name provided...using backup filename: data_backup.gob")
+		filename = "data_backup.gob"
+	}
+	return filepath.Join("db", filename)
+}
+
+func AddNewTicket(Id string, Title string) error {
+	newTicket := Ticket{
+		ID:        Id,
+		Title:     Title,
+		StartedOn: time.Now(),
+	}
+
+	db, err := LoadTickets()
+	if err != nil {
+		return err
+	}
+
+	db.addTicketIfNotExists(newTicket)
+
+	return nil
+}
+
+func LoadTickets() (*TicketDB, error) {
 	db := &TicketDB{
 		Tickets: make(map[string]Ticket),
 	}
 
+	filename := getDBPath()
 	file, err := os.Open(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -43,7 +69,8 @@ func LoadTickets(filename string) (*TicketDB, error) {
 	return db, nil
 }
 
-func saveTickets(filename string, db *TicketDB) error {
+func saveTickets(db *TicketDB) error {
+	filename := getDBPath()
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -59,38 +86,24 @@ func (db *TicketDB) addTicketIfNotExists(ticket Ticket) bool {
 		return false
 	}
 	db.Tickets[ticket.ID] = ticket
+	saveTickets(db)
 	return true
 }
 
-func SaveTicketsToFile(tickets []Ticket) {
-	filename := vars.DB_FILENAME
-
-	if filename == "" {
-		out.Errorln("No file name provided for saving data...proceeding with backup filename: data_backup.gob")
-		filename = "data_backup.gob"
+func (db *TicketDB) DeleteTicket(ticketID string) bool {
+	if _, exists := db.Tickets[ticketID]; exists {
+		delete(db.Tickets, ticketID)
+		saveTickets(db)
+		return true
 	}
+	return false
+}
 
-	filePath := filepath.Join("db", filename)
+func (db *TicketDB) DeleteAllTickets() error {
+	db.Tickets = make(map[string]Ticket)
 
-	db, err := LoadTickets(filePath)
-	if err != nil {
-		fmt.Printf("Error loading tickets: %v\n", err)
-		return
+	if err := saveTickets(db); err != nil {
+		return err
 	}
-
-	for _, ticket := range tickets {
-		if db.addTicketIfNotExists(ticket) {
-			fmt.Printf("Added new ticket: %s\n", ticket.ID)
-		} else {
-			out.Warningf("Ticket %s already exists, skipping\n", ticket.ID)
-		}
-	}
-
-	err = saveTickets(filePath, db)
-	if err != nil {
-		fmt.Printf("Error saving tickets: %v\n", err)
-		return
-	}
-
-	out.Successln("Ticket database updated successfully!")
+	return nil
 }

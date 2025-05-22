@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 	"task-time-logger-go/utils"
 	"task-time-logger-go/utils/enums/params"
@@ -40,32 +39,20 @@ func GetTaskByID(ctx *fiber.Ctx) error {
 	return ctx.JSON(response.Value())
 }
 
-func InitTaskTimeLog(ctx *fiber.Ctx) error {
+func InitTaskTimeById(ctx *fiber.Ctx) error {
 	ticketID := ctx.Params(params.TICKET_ID)
 	if ticketID == "" {
 		return ctx.Status(fiber.StatusBadRequest).SendString("Ticket ID not provided!")
 	}
 
-	var tickets []utils.Ticket = []utils.Ticket{
-		{ID: ticketID, Title: "Sample Title", StartedOn: time.Now()},
-	}
+	utils.AddNewTicket(ticketID, "Sample Title")
 
-	utils.SaveTicketsToFile(tickets)
-
-	return ctx.SendString("Ticket successfully posted!")
+	return ctx.SendString("Time started for ticket!")
 }
 
 func GetAddedTasks(ctx *fiber.Ctx) error {
-	filename := vars.DB_FILENAME
 
-	if filename == "" {
-		out.Errorln("No file name provided for retrieving data...proceeding with backup filename: data_backup.gob")
-		filename = "data_backup.gob"
-	}
-
-	filePath := filepath.Join("db", filename)
-
-	db, err := utils.LoadTickets(filePath)
+	db, err := utils.LoadTickets()
 
 	if err != nil {
 		out.Errorln(err.Error())
@@ -90,4 +77,35 @@ func GetAddedTasks(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(response)
+}
+
+func DeleteTaskById(ctx *fiber.Ctx) error {
+	ticketID := ctx.Params(params.TICKET_ID)
+	if ticketID == "" {
+		return ctx.Status(fiber.StatusBadRequest).SendString("Ticket ID not provided!")
+	}
+	db, err := utils.LoadTickets()
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).SendString("Error while retrieving database!")
+	}
+
+	isTicketDeleted := db.DeleteTicket(ticketID)
+
+	if isTicketDeleted {
+		return ctx.SendString("Ticket deleted from db!")
+	}
+	return ctx.Status(fiber.StatusInternalServerError).SendString("An error occured while deleting the ticket!")
+}
+
+func DeleteAllTasks(ctx *fiber.Ctx) error {
+	db, err := utils.LoadTickets()
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).SendString("Could not load db!")
+	}
+	err = db.DeleteAllTickets()
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).SendString("Could not delete tickets!")
+	}
+
+	return ctx.SendString("Successfully deleted all tickets !")
 }

@@ -32,7 +32,9 @@ func main() {
 	tasks.Get("/", handlers.GetTasks)
 	tasks.Get("/added/", handlers.GetAddedTasks)
 	tasks.Get("/:"+params.TICKET_ID, handlers.GetTaskByID)
-	tasks.Post("/:"+params.TICKET_ID, handlers.InitTaskTimeLog)
+	tasks.Post("/:"+params.TICKET_ID, handlers.InitTaskTimeById)
+	tasks.Delete("/all", handlers.DeleteAllTasks)
+	tasks.Delete("/:"+params.TICKET_ID, handlers.DeleteTaskById)
 	projects.Get("/", handlers.GetAllProjectsKeys)
 
 	app.Listen(":8080")
