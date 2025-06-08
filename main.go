@@ -1,41 +1,40 @@
 package main
 
 import (
-	"os"
-	"task-time-logger-go/handlers"
-	"task-time-logger-go/utils/enums/params"
-	"task-time-logger-go/utils/vars"
+	"task-time-logger-go/internal/api"
+	"task-time-logger-go/internal/config"
+	"task-time-logger-go/internal/models/params"
+	"task-time-logger-go/internal/storage"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		panic("Couldn't Load .env file!")
+	if err := config.Load(); err != nil {
+		panic("Couldn't Load configuration!")
 	}
-	vars.DB_FILENAME = os.Getenv("DB_FILENAME")
-	vars.JIRA_BASE_URL = os.Getenv("JIRA_BASE_URL")
-	vars.JIRA_USERNAME = os.Getenv("JIRA_USERNAME")
-	vars.JIRA_API_TOKEN = os.Getenv("JIRA_API_TOKEN")
+
+	if err := storage.Initialize(); err != nil {
+		panic("Couldn't initialize storage!")
+	}
+
 	app := fiber.New()
 	app.Use(cors.New())
 
-	app.Get("/", handlers.GetHomePage)
+	app.Get("/", api.GetHomePage)
 
 	apiGroup := app.Group("/api")
 	tasks := apiGroup.Group("/tasks")
 	projects := apiGroup.Group("/projects")
 
-	tasks.Get("/", handlers.GetTasks)
-	tasks.Get("/added/", handlers.GetAddedTasks)
-	tasks.Get("/:"+params.TICKET_ID, handlers.GetTaskByID)
-	tasks.Post("/:"+params.TICKET_ID, handlers.InitTaskTimeById)
-	tasks.Delete("/all", handlers.DeleteAllTasks)
-	tasks.Delete("/:"+params.TICKET_ID, handlers.DeleteTaskById)
-	projects.Get("/", handlers.GetAllProjectsKeys)
+	tasks.Get("/", api.GetTasks)
+	tasks.Get("/added/", api.GetAddedTasks)
+	tasks.Get("/:"+params.TICKET_ID, api.GetTaskByID)
+	tasks.Post("/:"+params.TICKET_ID, api.InitTaskTimeById)
+	tasks.Delete("/all", api.DeleteAllTasks)
+	tasks.Delete("/:"+params.TICKET_ID, api.DeleteTaskById)
+	projects.Get("/", api.GetAllProjectsKeys)
 
 	app.Listen(":8080")
 }

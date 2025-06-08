@@ -1,4 +1,4 @@
-package utils
+package storage
 
 import (
 	"encoding/gob"
@@ -8,12 +8,6 @@ import (
 	"task-time-logger-go/utils/vars"
 	"time"
 )
-
-type Ticket struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	StartedOn time.Time `json:"statedOn"`
-}
 
 type TicketDB struct {
 	Tickets map[string]Ticket
