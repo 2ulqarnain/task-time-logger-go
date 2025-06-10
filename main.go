@@ -3,7 +3,9 @@ package main
 import (
 	"task-time-logger-go/internal/api"
 	"task-time-logger-go/internal/config"
-	"task-time-logger-go/internal/models/params"
+	"task-time-logger-go/internal/logger"
+	"task-time-logger-go/internal/middlewares"
+	"task-time-logger-go/internal/models/enums/params"
 	"task-time-logger-go/internal/storage"
 
 	"github.com/gofiber/fiber/v2"
@@ -12,15 +14,16 @@ import (
 
 func main() {
 	if err := config.Load(); err != nil {
-		panic("Couldn't Load configuration!")
+		logger.AppLogger.Fatalf("Couldn't Load configuration: %v", err)
 	}
 
 	if err := storage.Initialize(); err != nil {
-		panic("Couldn't initialize storage!")
+		logger.AppLogger.Fatalf("Couldn't initialize storage, %sERROR: %s%v", logger.ColorLightRed, logger.ColorReset, err)
 	}
 
 	app := fiber.New()
 	app.Use(cors.New())
+	app.Use(middlewares.LoggerMiddleware)
 
 	app.Get("/", api.GetHomePage)
 
@@ -28,13 +31,12 @@ func main() {
 	tasks := apiGroup.Group("/tasks")
 	projects := apiGroup.Group("/projects")
 
-	tasks.Get("/", api.GetTasks)
-	tasks.Get("/added/", api.GetAddedTasks)
+	tasks.Get("/", api.GetAllTasks)
+	tasks.Post("/", api.InitTaskTimeById)
+	tasks.Delete("/", api.DeleteAllTasks)
 	tasks.Get("/:"+params.TICKET_ID, api.GetTaskByID)
-	tasks.Post("/:"+params.TICKET_ID, api.InitTaskTimeById)
-	tasks.Delete("/all", api.DeleteAllTasks)
 	tasks.Delete("/:"+params.TICKET_ID, api.DeleteTaskById)
 	projects.Get("/", api.GetAllProjectsKeys)
 
-	app.Listen(":8080")
+	logger.AppLogger.Fatal(app.Listen(":8080"))
 }

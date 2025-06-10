@@ -2,9 +2,11 @@ package storage
 
 import (
 	"encoding/gob"
+	"fmt"
 	"os"
 	"path/filepath"
-	"task-time-logger-go/utils/out"
+	"task-time-logger-go/internal/config"
+	"task-time-logger-go/internal/logger"
 	"task-time-logger-go/utils/vars"
 	"time"
 )
@@ -16,7 +18,7 @@ type TicketDB struct {
 func getDBPath() string {
 	filename := vars.DB_FILENAME
 	if filename == "" {
-		out.Errorln("No file name provided...using backup filename: data_backup.gob")
+		fmt.Println("No file name provided...using backup filename: data_backup.gob")
 		filename = "data_backup.gob"
 	}
 	return filepath.Join("db", filename)
@@ -42,6 +44,11 @@ func AddNewTicket(Id string, Title string) error {
 func LoadTickets() (*TicketDB, error) {
 	db := &TicketDB{
 		Tickets: make(map[string]Ticket),
+	}
+
+	if config.AppConfig.DBFilename == "" {
+		logger.AppLogger.Println("No file name provided...using backup filename: data_backup.gob")
+		config.AppConfig.DBFilename = "data_backup.gob"
 	}
 
 	filename := getDBPath()

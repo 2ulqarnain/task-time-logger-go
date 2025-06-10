@@ -5,5 +5,6 @@ import (
 )
 
 func GetHomePage(c *fiber.Ctx) error {
-	return c.SendString("Task Time Logger API")
+	c.Set(fiber.HeaderContentType, fiber.MIMETextHTML)
+	return c.SendString("<b>Hello World</b>")
 }

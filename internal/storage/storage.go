@@ -2,16 +2,49 @@ package storage
 
 import (
 	"encoding/gob"
+	"encoding/json"
+	"fmt"
 	"os"
+	"slices"
 	"time"
 
 	"task-time-logger-go/internal/config"
+	"task-time-logger-go/internal/logger"
 )
+
+// NullTime represents a nullable time value
+type NullTime time.Time
+
+// MarshalJSON implements custom JSON marshaling
+func (nt NullTime) MarshalJSON() ([]byte, error) {
+	t := time.Time(nt)
+	if t.IsZero() {
+		return []byte("null"), nil
+	}
+	return json.Marshal(t)
+}
+
+// GobEncode implements the gob.GobEncoder interface
+func (nt NullTime) GobEncode() ([]byte, error) {
+	t := time.Time(nt)
+	return t.GobEncode()
+}
+
+// GobDecode implements the gob.GobDecoder interface
+func (nt *NullTime) GobDecode(data []byte) error {
+	var t time.Time
+	if err := t.GobDecode(data); err != nil {
+		return err
+	}
+	*nt = NullTime(t)
+	return nil
+}
 
 type Ticket struct {
 	ID        string    `json:"id"`
 	Title     string    `json:"title"`
 	StartedOn time.Time `json:"startedOn"`
+	EndedOn   NullTime  `json:"endedOn"`
 }
 
 type Database struct {
@@ -31,6 +64,12 @@ func Initialize() error {
 		}
 		return err
 	}
+	fi, err := file.Stat()
+	if err != nil {
+		logger.AppLogger.Printf("Failed to get file stats: %v", err)
+		return err
+	}
+	fmt.Printf("%sDatabase file size: %s%d bytes", logger.ColorGray, logger.ColorReset, fi.Size())
 	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
@@ -52,10 +91,6 @@ func GetAllTasks() []Ticket {
 	return db.Tickets
 }
 
-func GetAddedTasks() []Ticket {
-	return db.Tickets
-}
-
 func GetTaskByID(ticketID string) *Ticket {
 	for _, ticket := range db.Tickets {
 		if ticket.ID == ticketID {
@@ -65,26 +100,28 @@ func GetTaskByID(ticketID string) *Ticket {
 	return nil
 }
 
-func InitTaskTimeById(ticketID string) *Ticket {
+func InitTaskTimeById(ticketID string, ticketTitle string) *Ticket {
 	ticket := &Ticket{
 		ID:        ticketID,
-		Title:     "Sample Title", // TODO: Get from JIRA
+		Title:     ticketTitle,
 		StartedOn: time.Now(),
+		EndedOn:   NullTime(time.Time{}),
 	}
 	db.Tickets = append(db.Tickets, *ticket)
 	SaveTickets()
 	return ticket
 }
 
-func DeleteAllTasks() error {
+func DeleteAllTasks() (int, error) {
+	ticketsCount := len(db.Tickets)
 	db.Tickets = []Ticket{}
-	return SaveTickets()
+	return ticketsCount, SaveTickets()
 }
 
 func DeleteTaskById(ticketID string) error {
 	for i, ticket := range db.Tickets {
 		if ticket.ID == ticketID {
-			db.Tickets = append(db.Tickets[:i], db.Tickets[i+1:]...)
+			db.Tickets = slices.Delete(db.Tickets, i, i+1)
 			return SaveTickets()
 		}
 	}

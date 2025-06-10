@@ -21,7 +21,7 @@ func Load() error {
 	}
 
 	AppConfig = Config{
-		DBFilename:   os.Getenv("DB_FILENAME"),
+		DBFilename:   "internal/storage/" + os.Getenv("DB_FILENAME"),
 		JiraBaseURL:  os.Getenv("JIRA_BASE_URL"),
 		JiraUsername: os.Getenv("JIRA_USERNAME"),
 		JiraAPIToken: os.Getenv("JIRA_API_TOKEN"),

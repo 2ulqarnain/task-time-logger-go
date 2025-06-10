@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"task-time-logger-go/internal/logger"
 	"task-time-logger-go/internal/models/enums/constants"
 	"time"
 )
@@ -62,12 +63,14 @@ func TimeAgo(t time.Time) string {
 	}
 }
 
-func CalculateWorkDuration(startTime, endTime time.Time) time.Duration {
+func CalculateWorkDuration(startTime, endTime time.Time) string {
 	if endTime.Before(startTime) {
-		return 0
+		return "0"
 	}
-	var totalDuration time.Duration
+
+	totalDuration := endTime.Sub(startTime)
 	workingDayStart := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), constants.WorkingDayStart, 0, 0, 0, time.Local)
-	fmt.Println(totalDuration, workingDayStart)
-	return 0
+	logger.AppLogger.Printf("Total duration: %v, Working day start: %v", totalDuration, workingDayStart)
+
+	return fmt.Sprintf("%v", totalDuration)
 }
