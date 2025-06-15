@@ -53,9 +53,5 @@ func GetJiraProjects() ([]string, error) {
 		keys = append(keys, item.String())
 	}
 
-	if len(keys) == 0 {
-		return nil, fmt.Errorf("no projects found")
-	}
-
 	return keys, nil
 }
