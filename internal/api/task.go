@@ -5,6 +5,7 @@ import (
 	"task-time-logger-go/internal/logger"
 	"task-time-logger-go/internal/models/enums/params"
 	"task-time-logger-go/internal/models/structs"
+	"task-time-logger-go/internal/services"
 	"task-time-logger-go/internal/storage"
 	"task-time-logger-go/utils"
 	"time"
@@ -44,8 +45,7 @@ func GetTaskByID(c *fiber.Ctx) error {
 
 func InitTaskTimeById(c *fiber.Ctx) error {
 	var requestBody struct {
-		ID    string `json:"id"`
-		Title string `json:"title"`
+		ID string `json:"id"`
 	}
 
 	if err := c.BodyParser(&requestBody); err != nil {
@@ -62,8 +62,19 @@ func InitTaskTimeById(c *fiber.Ctx) error {
 		})
 	}
 
-	ticket := storage.InitTaskTimeById(requestBody.ID, requestBody.Title)
-	return c.JSON(structs.ApiResponse(false, "Task started successfully", ticket))
+	storedTicket := storage.GetTaskByID(requestBody.ID)
+
+	if storedTicket != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(structs.ApiResponse(true, "Ticket already exists", nil))
+	}
+
+	ticket, err := services.GetJiraIssueByID(requestBody.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(structs.ApiResponse(true, "Could not get data from Jira", nil))
+	}
+
+	storedTicket = storage.InitTaskTimeById(ticket.ID, ticket.Title, ticket.Status)
+	return c.JSON(structs.ApiResponse(false, "Task started successfully", storedTicket))
 }
 
 func DeleteAllTasks(c *fiber.Ctx) error {

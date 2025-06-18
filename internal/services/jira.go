@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -54,4 +55,44 @@ func GetJiraProjects() ([]string, error) {
 	}
 
 	return keys, nil
+}
+
+type JiraIssueStatus struct {
+	Name string `json:"name"`
+}
+
+type JiraIssueFields struct {
+	Summary string          `json:"summary"`
+	Status  JiraIssueStatus `json:"status"`
+}
+
+type JiraIssueResponse struct {
+	ID     string          `json:"id"`
+	Key    string          `json:"key"`
+	Fields JiraIssueFields `json:"fields"`
+}
+
+type JiraIssue struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Status string `json:"status"`
+}
+
+func GetJiraIssueByID(id string) (JiraIssue, error) {
+	url := config.AppConfig.JiraBaseURL + "/rest/api/3/issue/" + id
+	body, err := CallJiraAPI(url)
+	if err != nil {
+		return JiraIssue{}, err
+	}
+
+	var issue JiraIssueResponse
+	err = json.Unmarshal(body, &issue)
+	if err != nil {
+		return JiraIssue{}, err
+	}
+	return JiraIssue{
+		ID:     issue.Key,
+		Title:  issue.Fields.Summary,
+		Status: issue.Fields.Status.Name,
+	}, nil
 }

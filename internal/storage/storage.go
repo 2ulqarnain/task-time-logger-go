@@ -43,6 +43,7 @@ func (nt *NullTime) GobDecode(data []byte) error {
 type Ticket struct {
 	ID        string    `json:"id"`
 	Title     string    `json:"title"`
+	Status    string    `json:"status"`
 	StartedOn time.Time `json:"startedOn"`
 	EndedOn   NullTime  `json:"endedOn"`
 }
@@ -100,10 +101,11 @@ func GetTaskByID(ticketID string) *Ticket {
 	return nil
 }
 
-func InitTaskTimeById(ticketID string, ticketTitle string) *Ticket {
+func InitTaskTimeById(ticketID string, ticketTitle string, ticketStatus string) *Ticket {
 	ticket := &Ticket{
 		ID:        ticketID,
 		Title:     ticketTitle,
+		Status:    ticketStatus,
 		StartedOn: time.Now(),
 		EndedOn:   NullTime(time.Time{}),
 	}
