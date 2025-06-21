@@ -3,7 +3,7 @@ package api
 import (
 	"fmt"
 	"task-time-logger-go/internal/logger"
-	"task-time-logger-go/internal/models/enums/params"
+	"task-time-logger-go/internal/models/enums/constants"
 	"task-time-logger-go/internal/models/structs"
 	"task-time-logger-go/internal/services"
 	"task-time-logger-go/internal/storage"
@@ -26,7 +26,7 @@ func GetAllTasks(c *fiber.Ctx) error {
 }
 
 func GetTaskByID(c *fiber.Ctx) error {
-	ticketID := c.Params(params.TICKET_ID)
+	ticketID := c.Params(constants.TICKET_ID)
 	task := storage.GetTaskByID(ticketID)
 	taskWithDuration := struct {
 		ID        string    `json:"id"`
@@ -92,7 +92,7 @@ func DeleteAllTasks(c *fiber.Ctx) error {
 }
 
 func DeleteTaskById(c *fiber.Ctx) error {
-	ticketID := c.Params(params.TICKET_ID)
+	ticketID := c.Params(constants.TICKET_ID)
 	storage.DeleteTaskById(ticketID)
 	return c.SendStatus(fiber.StatusOK)
 }

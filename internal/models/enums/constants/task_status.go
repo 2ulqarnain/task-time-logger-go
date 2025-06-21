@@ -1,4 +1,4 @@
-package Status
+package constants
 
 const Todo string = "To do"
 const InProgress string = "In progress"

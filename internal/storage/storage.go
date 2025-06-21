@@ -55,26 +55,30 @@ type Database struct {
 var db Database
 
 // Initialize loads the database from disk
-func Initialize() error {
+func Initialize() {
 	file, err := os.Open(config.AppConfig.DBFilename)
 	if err != nil {
 		// If file doesn't exist, create an empty database
 		if os.IsNotExist(err) {
 			db = Database{Tickets: []Ticket{}}
-			return SaveTickets()
+			if err := SaveTickets(); err != nil {
+				logger.AppLogger.Fatalf("Could not initialize database storage, Error: %v", err)
+			}
+		} else {
+			logger.AppLogger.Fatal(err)
 		}
-		return err
 	}
 	fi, err := file.Stat()
 	if err != nil {
 		logger.AppLogger.Printf("Failed to get file stats: %v", err)
-		return err
 	}
 	fmt.Printf("%sDatabase file size: %s%d bytes", logger.ColorGray, logger.ColorReset, fi.Size())
 	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
-	return decoder.Decode(&db)
+	if err := decoder.Decode(&db); err != nil {
+		logger.AppLogger.Fatalln(err)
+	}
 }
 
 func SaveTickets() error {

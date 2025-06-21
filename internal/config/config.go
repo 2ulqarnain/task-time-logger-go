@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"task-time-logger-go/internal/logger"
 
 	"github.com/joho/godotenv"
 )
@@ -15,9 +16,9 @@ type Config struct {
 
 var AppConfig Config
 
-func Load() error {
+func Load() {
 	if err := godotenv.Load(); err != nil {
-		return err
+		logger.AppLogger.Fatalf("Couldn't Load configuration: %v", err)
 	}
 
 	AppConfig = Config{
@@ -26,6 +27,4 @@ func Load() error {
 		JiraUsername: os.Getenv("JIRA_USERNAME"),
 		JiraAPIToken: os.Getenv("JIRA_API_TOKEN"),
 	}
-
-	return nil
 }
