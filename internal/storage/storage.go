@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"os"
 	"slices"
@@ -10,46 +9,11 @@ import (
 
 	"task-time-logger-go/internal/config"
 	"task-time-logger-go/internal/logger"
+	"task-time-logger-go/internal/models/structs"
 )
 
-// NullTime represents a nullable time value
-type NullTime time.Time
-
-// MarshalJSON implements custom JSON marshaling
-func (nt NullTime) MarshalJSON() ([]byte, error) {
-	t := time.Time(nt)
-	if t.IsZero() {
-		return []byte("null"), nil
-	}
-	return json.Marshal(t)
-}
-
-// GobEncode implements the gob.GobEncoder interface
-func (nt NullTime) GobEncode() ([]byte, error) {
-	t := time.Time(nt)
-	return t.GobEncode()
-}
-
-// GobDecode implements the gob.GobDecoder interface
-func (nt *NullTime) GobDecode(data []byte) error {
-	var t time.Time
-	if err := t.GobDecode(data); err != nil {
-		return err
-	}
-	*nt = NullTime(t)
-	return nil
-}
-
-type Ticket struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	Status    string    `json:"status"`
-	StartedOn time.Time `json:"startedOn"`
-	EndedOn   NullTime  `json:"endedOn"`
-}
-
 type Database struct {
-	Tickets []Ticket
+	Tickets []structs.Ticket
 }
 
 var db Database
@@ -60,10 +24,12 @@ func Initialize() {
 	if err != nil {
 		// If file doesn't exist, create an empty database
 		if os.IsNotExist(err) {
-			db = Database{Tickets: []Ticket{}}
+			db = Database{Tickets: []structs.Ticket{}}
 			if err := SaveTickets(); err != nil {
 				logger.AppLogger.Fatalf("Could not initialize database storage, Error: %v", err)
 			}
+			logger.AppLogger.Println("Created new database file !")
+			return
 		} else {
 			logger.AppLogger.Fatal(err)
 		}
@@ -72,7 +38,7 @@ func Initialize() {
 	if err != nil {
 		logger.AppLogger.Printf("Failed to get file stats: %v", err)
 	}
-	fmt.Printf("%sDatabase file size: %s%d bytes", logger.ColorGray, logger.ColorReset, fi.Size())
+	fmt.Printf("%sDatabase file size: %s%d bytes \n", logger.ColorGray, logger.ColorReset, fi.Size())
 	defer file.Close()
 
 	decoder := gob.NewDecoder(file)
@@ -92,11 +58,11 @@ func SaveTickets() error {
 	return encoder.Encode(db)
 }
 
-func GetAllTasks() []Ticket {
+func GetAllTasks() []structs.Ticket {
 	return db.Tickets
 }
 
-func GetTaskByID(ticketID string) *Ticket {
+func GetTaskByID(ticketID string) *structs.Ticket {
 	for _, ticket := range db.Tickets {
 		if ticket.ID == ticketID {
 			return &ticket
@@ -105,13 +71,13 @@ func GetTaskByID(ticketID string) *Ticket {
 	return nil
 }
 
-func InitTaskTimeById(ticketID string, ticketTitle string, ticketStatus string) *Ticket {
-	ticket := &Ticket{
+func InitTaskTimeById(ticketID string, ticketTitle string, ticketStatus string) *structs.Ticket {
+	ticket := &structs.Ticket{
 		ID:        ticketID,
 		Title:     ticketTitle,
 		Status:    ticketStatus,
 		StartedOn: time.Now(),
-		EndedOn:   NullTime(time.Time{}),
+		EndedOn:   structs.NullTime(time.Time{}),
 	}
 	db.Tickets = append(db.Tickets, *ticket)
 	SaveTickets()
@@ -120,7 +86,7 @@ func InitTaskTimeById(ticketID string, ticketTitle string, ticketStatus string) 
 
 func DeleteAllTasks() (int, error) {
 	ticketsCount := len(db.Tickets)
-	db.Tickets = []Ticket{}
+	db.Tickets = []structs.Ticket{}
 	return ticketsCount, SaveTickets()
 }
 
@@ -132,4 +98,15 @@ func DeleteTaskById(ticketID string) error {
 		}
 	}
 	return nil
+}
+
+// UpdateTicket updates an existing ticket by ID
+func UpdateTicket(ticketID string, updatedTicket structs.Ticket) error {
+	for i, ticket := range db.Tickets {
+		if ticket.ID == ticketID {
+			db.Tickets[i] = updatedTicket
+			return SaveTickets()
+		}
+	}
+	return fmt.Errorf("ticket with ID %s not found", ticketID)
 }

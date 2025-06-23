@@ -7,12 +7,13 @@ import (
 	"path/filepath"
 	"task-time-logger-go/internal/config"
 	"task-time-logger-go/internal/logger"
+	"task-time-logger-go/internal/models/structs"
 	"task-time-logger-go/utils/vars"
 	"time"
 )
 
 type TicketDB struct {
-	Tickets map[string]Ticket
+	Tickets map[string]structs.Ticket
 }
 
 func getDBPath() string {
@@ -25,7 +26,7 @@ func getDBPath() string {
 }
 
 func AddNewTicket(Id string, Title string) error {
-	newTicket := Ticket{
+	newTicket := structs.Ticket{
 		ID:        Id,
 		Title:     Title,
 		StartedOn: time.Now(),
@@ -43,7 +44,7 @@ func AddNewTicket(Id string, Title string) error {
 
 func LoadTickets() (*TicketDB, error) {
 	db := &TicketDB{
-		Tickets: make(map[string]Ticket),
+		Tickets: make(map[string]structs.Ticket),
 	}
 
 	if config.AppConfig.DBFilename == "" {
@@ -82,7 +83,7 @@ func saveTickets(db *TicketDB) error {
 	return encoder.Encode(db)
 }
 
-func (db *TicketDB) addTicketIfNotExists(ticket Ticket) bool {
+func (db *TicketDB) addTicketIfNotExists(ticket structs.Ticket) bool {
 	if _, exists := db.Tickets[ticket.ID]; exists {
 		return false
 	}
@@ -101,7 +102,7 @@ func (db *TicketDB) DeleteTicket(ticketID string) bool {
 }
 
 func (db *TicketDB) DeleteAllTickets() error {
-	db.Tickets = make(map[string]Ticket)
+	db.Tickets = make(map[string]structs.Ticket)
 
 	if err := saveTickets(db); err != nil {
 		return err

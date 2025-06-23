@@ -17,7 +17,7 @@ func GetAllTasks(c *fiber.Ctx) error {
 	tasks := storage.GetAllTasks()
 	type responseData struct {
 		Count int              `json:"count"`
-		Tasks []storage.Ticket `json:"tasks"`
+		Tasks []structs.Ticket `json:"tasks"`
 	}
 	return c.JSON(structs.ApiResponse(false, "All tasks fetched successfully", responseData{
 		Count: len(tasks),

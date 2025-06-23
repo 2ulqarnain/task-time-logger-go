@@ -2,6 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"task-time-logger-go/internal/logger"
 	"task-time-logger-go/internal/models/enums/constants"
 	"time"
@@ -73,4 +76,53 @@ func CalculateWorkDuration(startTime, endTime time.Time) string {
 	logger.AppLogger.Printf("Total duration: %v, Working day start: %v", totalDuration, workingDayStart)
 
 	return fmt.Sprintf("%v", totalDuration)
+}
+
+func ParseTimeAgo(timeAgoStr string) (time.Time, error) {
+	now := time.Now()
+	timeAgoStr = strings.TrimSpace(strings.ToLower(timeAgoStr))
+
+	switch timeAgoStr {
+	case "just now":
+		return now, nil
+	case "yesterday":
+		return now.AddDate(0, 0, -1), nil
+	case "in the future":
+		return now.Add(time.Hour), nil // Return 1 hour in future as default
+	}
+
+	// Use regex to parse patterns like "5m ago", "2h ago", "3d ago", etc.
+	re := regexp.MustCompile(`^(\d+)(m|h|d|w|mo|y)\s+ago$`)
+	matches := re.FindStringSubmatch(timeAgoStr)
+
+	if len(matches) != 3 {
+		return time.Time{}, fmt.Errorf("invalid time ago format: %s", timeAgoStr)
+	}
+
+	value, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return time.Time{}, fmt.Errorf("invalid number in time ago string: %s", matches[1])
+	}
+
+	unit := matches[2]
+	var duration time.Duration
+
+	switch unit {
+	case "m":
+		duration = time.Duration(value) * time.Minute
+	case "h":
+		duration = time.Duration(value) * time.Hour
+	case "d":
+		duration = time.Duration(value) * 24 * time.Hour
+	case "w":
+		duration = time.Duration(value) * 7 * 24 * time.Hour
+	case "mo":
+		duration = time.Duration(value) * 30 * 24 * time.Hour // Approximate
+	case "y":
+		duration = time.Duration(value) * 365 * 24 * time.Hour // Approximate
+	default:
+		return time.Time{}, fmt.Errorf("unknown time unit: %s", unit)
+	}
+
+	return now.Add(-duration), nil
 }
