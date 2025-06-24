@@ -10,6 +10,18 @@ import (
 	"time"
 )
 
+func CalculateWorkDuration(startTime, endTime time.Time) string {
+	if endTime.Before(startTime) {
+		return "0"
+	}
+
+	totalDuration := endTime.Sub(startTime)
+	workingDayStart := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), constants.WorkingDayStart, 0, 0, 0, time.Local)
+	logger.AppLogger.Printf("Total duration: %v, Working day start: %v", totalDuration, workingDayStart)
+
+	return fmt.Sprintf("%v", totalDuration)
+}
+
 func TimeAgo(t time.Time) string {
 	now := time.Now()
 	diff := now.Sub(t)
@@ -66,18 +78,6 @@ func TimeAgo(t time.Time) string {
 	}
 }
 
-func CalculateWorkDuration(startTime, endTime time.Time) string {
-	if endTime.Before(startTime) {
-		return "0"
-	}
-
-	totalDuration := endTime.Sub(startTime)
-	workingDayStart := time.Date(startTime.Year(), startTime.Month(), startTime.Day(), constants.WorkingDayStart, 0, 0, 0, time.Local)
-	logger.AppLogger.Printf("Total duration: %v, Working day start: %v", totalDuration, workingDayStart)
-
-	return fmt.Sprintf("%v", totalDuration)
-}
-
 func ParseTimeAgo(timeAgoStr string) (time.Time, error) {
 	now := time.Now()
 	timeAgoStr = strings.TrimSpace(strings.ToLower(timeAgoStr))
@@ -85,10 +85,8 @@ func ParseTimeAgo(timeAgoStr string) (time.Time, error) {
 	switch timeAgoStr {
 	case "just now":
 		return now, nil
-	case "yesterday":
-		return now.AddDate(0, 0, -1), nil
 	case "in the future":
-		return now.Add(time.Hour), nil // Return 1 hour in future as default
+		return time.Time{}, fmt.Errorf("time is in future, so cant parse")
 	}
 
 	// Use regex to parse patterns like "5m ago", "2h ago", "3d ago", etc.
