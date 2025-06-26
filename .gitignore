@@ -1,3 +1,4 @@
 .env
 internal/storage/data.gob
 .vscode/
+task-time-logger-go
