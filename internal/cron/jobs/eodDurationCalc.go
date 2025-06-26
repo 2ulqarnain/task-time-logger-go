@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"task-time-logger-go/internal/logger"
 	"task-time-logger-go/internal/storage"
-	"task-time-logger-go/utils"
 	"time"
 )
 
@@ -14,24 +13,25 @@ func EodDurationJob() {
 
 	for _, ticket := range tickets {
 		if time.Time(ticket.EndedOn).IsZero() {
-			if ticket.PrevDuration == "" {
+			if ticket.PrevDuration == 0 {
 				// Calculate duration between StartedOn and now
-				duration := utils.CalculateWorkDuration(time.Time(ticket.StartedOn), time.Now())
-				fmt.Printf("Calculated duration for ticket %s: %s\n", ticket.ID, duration)
-			} else {
-				// Parse previous duration and add 9h30m
-				prevTime, err := utils.ParseTimeAgo(ticket.PrevDuration)
-				if err != nil {
-					logger.AppLogger.Printf("Error parsing previous duration for ticket %s: %v", ticket.ID, err)
-					continue
+				duration := time.Since(time.Time(ticket.StartedOn))
+				minutes := int32(duration.Minutes())
+				fmt.Printf("Calculated duration for ticket %s: %d minutes\n", ticket.ID, minutes)
+
+				// Save the calculated duration
+				if err := storage.UpdateTaskDuration(ticket.ID, minutes); err != nil {
+					logger.AppLogger.Printf("Error updating duration for ticket %s: %v", ticket.ID, err)
 				}
+			} else {
+				// Add 9h30m (570 minutes) to previous duration
+				totalMinutes := ticket.PrevDuration + 570
+				fmt.Printf("Calculated duration for ticket %s with previous duration: %d minutes (total: %d minutes)\n", ticket.ID, ticket.PrevDuration, totalMinutes)
 
-				// Add 9h30m to the previous time
-				newTime := prevTime.Add(9*time.Hour + 30*time.Minute)
-
-				// Calculate duration from StartedOn to the new time
-				duration := utils.CalculateWorkDuration(time.Time(ticket.StartedOn), newTime)
-				fmt.Printf("Calculated duration for ticket %s with previous duration: %s\n", ticket.ID, duration)
+				// Save the updated duration
+				if err := storage.UpdateTaskDuration(ticket.ID, totalMinutes); err != nil {
+					logger.AppLogger.Printf("Error updating duration for ticket %s: %v", ticket.ID, err)
+				}
 			}
 		}
 	}

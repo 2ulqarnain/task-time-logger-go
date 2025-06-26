@@ -73,11 +73,12 @@ func GetTaskByID(ticketID string) *structs.Ticket {
 
 func InitTaskTimeById(ticketID string, ticketTitle string, ticketStatus string) *structs.Ticket {
 	ticket := &structs.Ticket{
-		ID:        ticketID,
-		Title:     ticketTitle,
-		Status:    ticketStatus,
-		StartedOn: time.Now(),
-		EndedOn:   structs.NullTime(time.Time{}),
+		ID:           ticketID,
+		Title:        ticketTitle,
+		Status:       ticketStatus,
+		StartedOn:    time.Now(),
+		PrevDuration: 0, // Initialize to 0 minutes
+		EndedOn:      structs.NullTime(time.Time{}),
 	}
 	db.Tickets = append(db.Tickets, *ticket)
 	SaveTickets()
@@ -105,6 +106,17 @@ func UpdateTicket(ticketID string, updatedTicket structs.Ticket) error {
 	for i, ticket := range db.Tickets {
 		if ticket.ID == ticketID {
 			db.Tickets[i] = updatedTicket
+			return SaveTickets()
+		}
+	}
+	return fmt.Errorf("ticket with ID %s not found", ticketID)
+}
+
+// UpdateTaskDuration updates the PrevDuration field for a specific ticket
+func UpdateTaskDuration(ticketID string, durationMinutes int32) error {
+	for i, ticket := range db.Tickets {
+		if ticket.ID == ticketID {
+			db.Tickets[i].PrevDuration = durationMinutes
 			return SaveTickets()
 		}
 	}

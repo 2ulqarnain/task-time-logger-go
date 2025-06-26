@@ -28,18 +28,30 @@ func GetAllTasks(c *fiber.Ctx) error {
 func GetTaskByID(c *fiber.Ctx) error {
 	ticketID := c.Params(constants.TICKET_ID)
 	task := storage.GetTaskByID(ticketID)
+
+	// Calculate current duration if task is still running
+	var currentDuration int32
+	if time.Time(task.EndedOn).IsZero() {
+		duration := time.Since(task.StartedOn)
+		currentDuration = utils.DurationToMinutes(duration)
+	} else {
+		currentDuration = task.PrevDuration
+	}
+
 	taskWithDuration := struct {
 		ID        string    `json:"id"`
 		Title     string    `json:"title"`
 		StartedOn time.Time `json:"startedOn"`
 		Duration  string    `json:"duration"`
+		Minutes   int32     `json:"minutes"`
 	}{
 		ID:        task.ID,
 		Title:     task.Title,
 		StartedOn: task.StartedOn,
-		Duration:  utils.TimeAgo(task.StartedOn),
+		Duration:  utils.MinutesToString(currentDuration),
+		Minutes:   currentDuration,
 	}
-	logger.AppLogger.Printf("Task duration: %f", time.Since(task.StartedOn).Hours())
+	logger.AppLogger.Printf("Task duration: %d minutes", currentDuration)
 	return c.JSON(structs.ApiResponse(false, "Task fetched successfully", taskWithDuration))
 }
 

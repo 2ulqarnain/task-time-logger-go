@@ -22,7 +22,7 @@ func NewCronManager() *CronManager {
 }
 
 func (cm *CronManager) registerJobs() {
-	cm.cron.AddFunc("*/1 * * * *", jobs.EodDurationJob)
+	cm.cron.AddFunc("30 18 * * *", jobs.EodDurationJob)
 }
 
 func (cm *CronManager) getJobsCount() int {

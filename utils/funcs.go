@@ -10,6 +10,26 @@ import (
 	"time"
 )
 
+// DurationToMinutes converts time.Duration to int32 minutes
+func DurationToMinutes(d time.Duration) int32 {
+	return int32(d.Minutes())
+}
+
+// MinutesToDuration converts int32 minutes to time.Duration
+func MinutesToDuration(minutes int32) time.Duration {
+	return time.Duration(minutes) * time.Minute
+}
+
+// MinutesToString converts int32 minutes to human-readable string
+func MinutesToString(minutes int32) string {
+	hours := minutes / 60
+	mins := minutes % 60
+	if hours > 0 {
+		return fmt.Sprintf("%dh%dm", hours, mins)
+	}
+	return fmt.Sprintf("%dm", mins)
+}
+
 func CalculateWorkDuration(startTime, endTime time.Time) string {
 	if endTime.Before(startTime) {
 		return "0"

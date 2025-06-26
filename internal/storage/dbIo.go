@@ -27,9 +27,10 @@ func getDBPath() string {
 
 func AddNewTicket(Id string, Title string) error {
 	newTicket := structs.Ticket{
-		ID:        Id,
-		Title:     Title,
-		StartedOn: time.Now(),
+		ID:           Id,
+		Title:        Title,
+		StartedOn:    time.Now(),
+		PrevDuration: 0,
 	}
 
 	db, err := LoadTickets()

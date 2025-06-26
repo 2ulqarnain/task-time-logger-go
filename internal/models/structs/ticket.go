@@ -7,6 +7,6 @@ type Ticket struct {
 	Title        string    `json:"title"`
 	Status       string    `json:"status"`
 	StartedOn    time.Time `json:"startedOn"`
-	PrevDuration string    `json:"duration"` /* Duration will be in minutes */
+	PrevDuration int32     `json:"duration"` /* Duration will be in minutes */
 	EndedOn      NullTime  `json:"endedOn"`
 }
