@@ -23,7 +23,9 @@ func main() {
 	defer cronMan.Stop()
 
 	app := fiber.New()
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "https://task-time-logger-svelte.vercel.app",
+	}))
 	app.Use(middlewares.LoggerMiddleware)
 
 	app.Get("/", api.GetHomePage)
@@ -39,5 +41,5 @@ func main() {
 	tasks.Delete("/:"+constants.TICKET_ID, api.DeleteTaskById)
 	projects.Get("/", api.GetAllProjectsKeys)
 
-	logger.AppLogger.Fatal(app.Listen(":8080"))
+	logger.AppLogger.Fatal(app.ListenTLS(":8080", "/etc/letsencrypt/archive/mywebdev.space/cert.pem", "/etc/letsencrypt/archive/mywebdev.space/key.pem"))
 }
